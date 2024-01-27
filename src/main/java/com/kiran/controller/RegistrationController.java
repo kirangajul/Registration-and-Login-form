@@ -4,6 +4,11 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -13,6 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.kiran.entity.User;
 import com.kiran.entity.VerificationToken;
 import com.kiran.event.RegistrationCompleteEvent;
+import com.kiran.model.LoginRequest;
 import com.kiran.model.UserModel;
 import com.kiran.service.EmailService;
 import com.kiran.service.UserService;
@@ -28,6 +34,11 @@ public class RegistrationController {
 
 	@Autowired
 	private EmailService emailService;
+	
+	@Autowired
+	private AuthenticationManager authenticationManager;
+	
+
 
 	@GetMapping("/hello")
 	public String helloWorld() {
@@ -60,6 +71,23 @@ public class RegistrationController {
 		return "Success";
 	}
 
+	@PostMapping("/login")
+    public ResponseEntity<?> loginUser(@RequestBody LoginRequest loginRequest) {
+        Authentication authentication = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(
+                        loginRequest.getEmail(),
+                        loginRequest.getPassword()
+                )
+        );
+
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+
+        // Optionally, you can handle the authentication success here or just return a success response
+        // For example:
+        return ResponseEntity.ok("Login successful! Redirect to the home page or handle as needed.");
+    }
+
+	
 	private String applicationUrl(HttpServletRequest request) {
 
 		return "http://" + request.getServerName() + ":" + request.getServerPort() + request.getContextPath();
