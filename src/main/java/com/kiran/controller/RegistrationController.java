@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.kiran.entity.User;
 import com.kiran.entity.VerificationToken;
 import com.kiran.event.RegistrationCompleteEvent;
+import com.kiran.exception.EmailAlreadyRegisteredException;
 import com.kiran.model.LoginRequest;
 import com.kiran.model.UserModel;
 import com.kiran.service.EmailService;
@@ -35,8 +36,8 @@ public class RegistrationController {
 	@Autowired
 	private EmailService emailService;
 	
-	@Autowired
-	private AuthenticationManager authenticationManager;
+//	@Autowired
+//	private AuthenticationManager authenticationManager;
 	
 
 
@@ -66,26 +67,33 @@ public class RegistrationController {
 
 	@PostMapping("/register")
 	public String registerUser(@RequestBody UserModel userModel, final HttpServletRequest request) {
-		User user = service.registerUser(userModel);
-		publisher.publishEvent(new RegistrationCompleteEvent(user, applicationUrl(request)));
+		try {
+			User user = service.registerUser(userModel);
+		} catch (EmailAlreadyRegisteredException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			
+			return e.getMessage();
+		}
+		//publisher.publishEvent(new RegistrationCompleteEvent(user, applicationUrl(request)));
 		return "Success";
 	}
 
-	@PostMapping("/login")
-    public ResponseEntity<?> loginUser(@RequestBody LoginRequest loginRequest) {
-        Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(
-                        loginRequest.getEmail(),
-                        loginRequest.getPassword()
-                )
-        );
-
-        SecurityContextHolder.getContext().setAuthentication(authentication);
-
-        // Optionally, you can handle the authentication success here or just return a success response
-        // For example:
-        return ResponseEntity.ok("Login successful! Redirect to the home page or handle as needed.");
-    }
+//	@PostMapping("/login")
+//    public ResponseEntity<?> loginUser(@RequestBody LoginRequest loginRequest) {
+//        Authentication authentication = authenticationManager.authenticate(
+//                new UsernamePasswordAuthenticationToken(
+//                        loginRequest.getEmail(),
+//                        loginRequest.getPassword()
+//                )
+//        );
+//
+//        SecurityContextHolder.getContext().setAuthentication(authentication);
+//
+//        // Optionally, you can handle the authentication success here or just return a success response
+//        // For example:
+//        return ResponseEntity.ok("Login successful! Redirect to the home page or handle as needed.");
+//    }
 
 	
 	private String applicationUrl(HttpServletRequest request) {

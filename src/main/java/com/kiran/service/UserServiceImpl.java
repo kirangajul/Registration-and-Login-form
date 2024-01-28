@@ -4,6 +4,7 @@ import java.util.Calendar;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -11,6 +12,7 @@ import com.kiran.dao.UserDao;
 import com.kiran.dao.VerificationTokenDao;
 import com.kiran.entity.User;
 import com.kiran.entity.VerificationToken;
+import com.kiran.exception.EmailAlreadyRegisteredException;
 import com.kiran.model.UserModel;
 
 @Service
@@ -26,7 +28,7 @@ public class UserServiceImpl implements UserService {
 	private VerificationTokenDao tokenDao;
 	
 	@Override
-	public User registerUser(UserModel userModel) {
+	public User registerUser(UserModel userModel) throws EmailAlreadyRegisteredException{
 		
 		User user = new User();
 			user.setEmail(userModel.getEmail());
@@ -35,7 +37,11 @@ public class UserServiceImpl implements UserService {
 			user.setRole("USER");
 			user.setPassword(passwordEncoder.encode(userModel.getPassword()));
 			
-			dao.save(user);
+			try {
+				dao.save(user);
+			} catch (DataIntegrityViolationException e) {
+				 throw new EmailAlreadyRegisteredException("Email already registered", user.getEmail());
+			}
 		return user;
 
 	}
